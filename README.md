@@ -1,5 +1,5 @@
 # immutable-matrices
-A basic linear algebra matrix library, written in C++.
+A basic linear algebra library that focuses on matrices, written in C++.
 
 The goal was to create a 'reasonably' performant library for matrix calculations. To this end I've utilized concepts such as matrix blocking, cache locality and temporality maximization, and multi-threading (using pthread). The main fuctions of importance for these techniques are the `transpose()` and `matrixMultiply()` functions as they best show-case the aforementioned concepts, and were the main focus of performance optimizations.
 
