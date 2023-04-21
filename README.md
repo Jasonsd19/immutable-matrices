@@ -1,9 +1,8 @@
 # immutable-matrices
 A basic linear algebra matrix library, written in C++.
 
-The goal was to create a 'reasonably' performant library for matrix calculations. To this end I've utilized concepts such as matrix blocking, maximizing cache
-locality and temporality, and multi-threading (using pthread). The main fuctions of importance for these techniques are the `transpose()` and `matrixMultiply()`
-functions as they best show-case the aforementioned concepts, and were the main focus of performance optimizations.
+The goal was to create a 'reasonably' performant library for matrix calculations. To this end I've utilized concepts such as matrix blocking, cache
+locality and temporality maximization, and multi-threading (using pthread). The main fuctions of importance for these techniques are the `transpose()` and `matrixMultiply()` functions as they best show-case the aforementioned concepts, and were the main focus of performance optimizations.
 
 Additionally, I've also utilized PLU factorization/decomposition as the basis for the various other foundational matrix functions such as `LUPDecompose()`, `solve()`,
 `determinant()`, and `inverse()`. The benefit to using PLU factorization is two-fold. First, it is a numerically stable algorithm which leads to less errors in our
