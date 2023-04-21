@@ -7,7 +7,7 @@ Additionally, I've also utilized PLU factorization/decomposition as the basis fo
 
 As of the time of writing this README there are some limitations to this library. First, the `LUPDecompose()` function only accepts square matrices. Second, the `solve()` function only returns unique solutions, and will throw an error otherwise. If I return to this project I would like to add additional functionality that would allow for the PLU factorization of certain non-square matrices, and allow for better differentiation between inconsistent/consistent systems of linear equations.
 
-I've also written my own basic testing framework for this project, and I definitely learned a lot of interesting C++ concepts along the way (comparing doubles!).
+I've also written my own basic testing framework for this project, and I definitely learned a lot of interesting C++ concepts along the way (comparing doubles is tough!).
 
 To run the tests on Linux you will need to have installed make, cmake, and a C++ compiler. Afterwards:
 
