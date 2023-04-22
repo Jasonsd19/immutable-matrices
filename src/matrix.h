@@ -16,9 +16,9 @@ class matrix {
 private:
     doubleArray_t mData;
 
-    const unsigned int rows;
+    unsigned int rows;
 
-    const unsigned int columns;
+    unsigned int columns;
 
 public:
     matrix(doubleArray_t data, int rows, int columns);

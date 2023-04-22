@@ -1,6 +1,9 @@
 #include "matrix.h"
 
-matrix::matrix(doubleArray_t data, int rows, int columns): rows(rows), columns(columns) {
+matrix::matrix(doubleArray_t data, int rows, int columns) {
+    this->rows = rows;
+    this->columns = columns;
+
     if (data.size() == rows * columns) {
         mData = data;
     }
@@ -10,7 +13,10 @@ matrix::matrix(doubleArray_t data, int rows, int columns): rows(rows), columns(c
     }
 }
 
-matrix::matrix(doubleArray_t data, int rowsColumns): rows(rowsColumns), columns(rowsColumns) {
+matrix::matrix(doubleArray_t data, int rowsColumns) {
+    this->rows = rowsColumns;
+    this->columns = rowsColumns;
+
     if (data.size() == rows * columns) {
         mData = data;
     }
@@ -20,7 +26,10 @@ matrix::matrix(doubleArray_t data, int rowsColumns): rows(rowsColumns), columns(
     }
 }
 
-matrix::matrix(twoDimDoubleArray_t data): rows(data.size()), columns(data[0].size()) {
+matrix::matrix(twoDimDoubleArray_t data) {
+    this->rows = data.size();
+    this->columns = data[0].size();
+
     mData = doubleArray_t(rows * columns);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
