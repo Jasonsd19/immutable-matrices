@@ -1,4 +1,12 @@
 #include "matrix.h"
+#include <thread>
+#include <math.h>
+#include <algorithm>
+
+matrix::matrix() {
+    this->rows = 0;
+    this->columns = 0;
+}
 
 matrix::matrix(doubleArray_t data, int rows, int columns) {
     this->rows = rows;
@@ -67,11 +75,20 @@ matrix matrix::operator+(matrix m) {
 
     doubleArray_t operandData = m.getData();
     doubleArray_t newData = doubleArray_t(rows * columns);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            newData[columns * i + j] = mData[columns * i + j] + operandData[columns * i + j];
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    newData[columns * i + j] = mData[columns * i + j] + operandData[columns * i + j];
+                }
+            }
         }
     }
+
     return matrix(newData, rows, columns);
 }
 
@@ -83,11 +100,20 @@ matrix matrix::operator-(matrix m) {
 
     doubleArray_t operandData = m.getData();
     doubleArray_t newData = doubleArray_t(rows * columns);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            newData[columns * i + j] = mData[columns * i + j] - operandData[columns * i + j];
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    newData[columns * i + j] = mData[columns * i + j] - operandData[columns * i + j];
+                }
+            }
         }
     }
+
     return matrix(newData, rows, columns);
 }
 
@@ -99,11 +125,20 @@ matrix matrix::operator*(matrix m) {
 
     doubleArray_t operandData = m.getData();
     doubleArray_t newData = doubleArray_t(rows * columns);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            newData[columns * i + j] = mData[columns * i + j] * operandData[columns * i + j];
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    newData[columns * i + j] = mData[columns * i + j] * operandData[columns * i + j];
+                }
+            }
         }
     }
+
     return matrix(newData, rows, columns);
 }
 
@@ -115,12 +150,28 @@ matrix matrix::operator/(matrix m) {
 
     doubleArray_t operandData = m.getData();
     doubleArray_t newData = doubleArray_t(rows * columns);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            newData[columns * i + j] = mData[columns * i + j] / operandData[columns * i + j];
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    newData[columns * i + j] = mData[columns * i + j] / operandData[columns * i + j];
+                }
+            }
         }
     }
+
     return matrix(newData, rows, columns);
+}
+
+matrix matrix::operator=(matrix m) {
+    mData = m.getData();
+    rows = m.getRows();
+    columns = m.getColumns();
+    return *this;
 }
 
 // Return the matrix element at the specified position (row, column)
@@ -147,6 +198,32 @@ std::ostream& operator<<(std::ostream& os, matrix& M) {
         os << std::endl;
     }
     return os;
+}
+
+// Returns the specified row
+matrix matrix::getRow(matrix M, int row) {
+    if (row >= M.rows) {
+        throw std::logic_error("Row index out of range");
+    }
+
+    std::vector<double> rowData;
+    for (int i = 0; i < M.columns; i++) {
+        rowData.push_back(M(row, i));
+    }
+    return matrix(rowData, 1, M.columns);
+}
+
+// Returns the specified column
+matrix matrix::getColumn(matrix M, int column) {
+    if (column >= M.columns) {
+        throw std::logic_error("Column index out of range");
+    }
+
+    std::vector<double> columnData;
+    for (int i = 0; i < M.rows; i++) {
+        columnData.push_back(M(i, column));
+    }
+    return matrix(columnData, M.rows, 1);
 }
 
 // Returns the input matrix with its elements multiplied by a scalar
@@ -181,13 +258,12 @@ matrix matrix::matrixMultiply(matrix leftMatrix, matrix rightMatrix) {
 
     // Define block size so we can use matrix blocking (this is specific to my CPU and architecture).
     // I tested various block sizes 8, 16, 32, 64, 128, 256, ..., and 64 seemed to perform the best.
-    const int blockSize = 64;
 
     auto matMulLoop = [&](int loopStart, int loopStep) {
         // This outer loop sets up matrix blocking in one dimension. I found blocking in one dimension performed
         // better than blocking in 2 or 3 dimensions.
-        for (int kk = 0; kk < columns; kk += blockSize) {
-            int kkMin = std::min(kk + blockSize, columns);
+        for (int kk = 0; kk < columns; kk += blockSizeMultiply) {
+            int kkMin = std::min(kk + blockSizeMultiply, columns);
             // Change loop order to maximize cache locality. Naive implementation is looping through i,j,k 
             // where i is the # of rows of the left matrix, j is the # of columns of the right matrix, and k is the
             // the number of multiplications between a row of the left matrix and column of the right matrix. Changing
@@ -245,13 +321,12 @@ matrix matrix::transpose(matrix M) {
 
     // Define block size so we can use matrix blocking (this is specific to my CPU and architecture).
     // I tested various block sizes 8, 16, 32, 64, 128, 256, ..., and 8 seemed to perform the best.
-    int blockSize = 8;
 
     auto matTransposeLoop = [&](int loopStart, int loopStep) {
-        for (int ii = loopStart; ii < loopStep; ii += blockSize) {
-            int iiMin = std::min(ii + blockSize, (int)rows);
-            for (int jj = 0; jj < columns; jj += blockSize) {
-                int jjMin = std::min(jj + blockSize, (int)columns);
+        for (int ii = loopStart; ii < loopStep; ii += blockSizeTranspose) {
+            int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+            for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+                int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
 
                 for (int i = ii; i < iiMin; i++) {
                     for (int j = jj; j < jjMin; j++) {
@@ -507,4 +582,72 @@ matrix matrix::inverseLUP(matrix L, matrix U, matrix P, int swaps) {
     }
 
     return matrix(inverseMatData, n);
+}
+
+// Sums all elements together and returns the result.
+double matrix::sum(matrix M) {
+    int rows = M.rows;
+    int columns = M.columns;
+    double result = 0.0;
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    result += M(i, j);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+
+// Apply the given function to each element in the input matrix.
+matrix matrix::map(matrix M, double (*f)(double)) {
+    int rows = M.rows;
+    int columns = M.columns;
+    doubleArray_t mappedValues;
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    mappedValues.push_back(f(M(i, j)));
+                }
+            }
+        }
+    }
+
+    return matrix(mappedValues, M.rows, M.columns);
+}
+
+// Apply the given function to each element in the input matrix.
+// Then sum all elements together and return the result.
+double matrix::mapSum(matrix M, double (*f)(double)) {
+    int rows = M.rows;
+    int columns = M.columns;
+    double result = 0.0;
+
+    for (int ii = 0; ii < rows; ii += blockSizeTranspose) {
+        int iiMin = std::min(ii + blockSizeTranspose, (int)rows);
+        for (int jj = 0; jj < columns; jj += blockSizeTranspose) {
+            int jjMin = std::min(jj + blockSizeTranspose, (int)columns);
+
+            for (int i = ii; i < iiMin; i++) {
+                for (int j = jj; j < jjMin; j++) {
+                    result += f(M(i, j));
+                }
+            }
+        }
+    }
+
+    return result;
 }

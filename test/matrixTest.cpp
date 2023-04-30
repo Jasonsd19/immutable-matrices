@@ -396,6 +396,72 @@ void testInverse() {
     outputTestResult(&failedTests, __func__);
 }
 
+void testGetColumn() {
+    std::vector<std::string> failedTests;
+
+    doubleArray_t m1Data = { -4, -2, -9, -3, -2, -6, -1, 1, -6 };
+    doubleArray_t results = { -4, -3,  -1 };
+
+    matrix m1 = matrix(m1Data, 3);
+
+    isTrue(isDataSame(matrix::getColumn(m1, 0).getData(), results), failedTests);
+
+    outputTestResult(&failedTests, __func__);
+}
+
+void testGetRow() {
+    std::vector<std::string> failedTests;
+
+    doubleArray_t m1Data = { -4, -2, -9, -3, -2, -6, -1, 1, -6 };
+    doubleArray_t results = { -4, -2, -9 };
+
+    matrix m1 = matrix(m1Data, 3);
+
+    isTrue(isDataSame(matrix::getRow(m1, 0).getData(), results), failedTests);
+
+    outputTestResult(&failedTests, __func__);
+}
+
+void testSum() {
+    std::vector<std::string> failedTests;
+
+    doubleArray_t m1Data = { -4, -2, -9, -3, -2, -6, -1, 1, -6 };
+    double results = -32;
+
+    matrix m1 = matrix(m1Data, 3);
+
+    isTrue(matrix::sum(m1) == results, failedTests);
+
+    outputTestResult(&failedTests, __func__);
+}
+
+void testMap() {
+    std::vector<std::string> failedTests;
+
+    doubleArray_t m1Data = { -4, -2, -9, -3, -2, -6, -1, 1, -6 };
+    doubleArray_t results = { 4, 2, 9, 3, 2, 6, 1, -1, 6 };
+
+    matrix m1 = matrix(m1Data, 3);
+
+    isTrue(isDataSame(matrix::map(m1, [](double x) { return x * -1; }).getData(), results), failedTests);
+
+    outputTestResult(&failedTests, __func__);
+}
+
+void testMapSum() {
+    std::vector<std::string> failedTests;
+
+    doubleArray_t m1Data = { -4, -2, -9, -3, -2, -6, -1, 1, -6 };
+    double results = 64;
+
+    matrix m1 = matrix(m1Data, 3);
+    matrix mappedM1 = matrix::map(m1, [](double x) { return x * -2; });
+
+    isTrue(matrix::sum(mappedM1) == results, failedTests);
+
+    outputTestResult(&failedTests, __func__);
+}
+
 // Call all test functions
 int main() {
     testMatrixConstructor();
@@ -413,4 +479,9 @@ int main() {
     testDeterminant();
     testInverseLUP();
     testInverse();
+    testGetColumn();
+    testGetRow();
+    testSum();
+    testMap();
+    testMapSum();
 }
